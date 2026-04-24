@@ -52,6 +52,30 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    // EventSource reconnects automatically on drop; the browser respects the
+    // server-sent `retry:` hint. We still guard against StrictMode remount.
+    const es = new EventSource("/api/stream");
+
+    es.addEventListener("message", (ev) => {
+      try {
+        const row = JSON.parse(ev.data) as Message;
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === row.id)) return prev;
+          return [...prev, row];
+        });
+      } catch {
+        // ignore malformed frames
+      }
+    });
+
+    es.addEventListener("flush", () => {
+      setMessages([]);
+    });
+
+    return () => es.close();
+  }, []);
+
   const commitHandle = (e: FormEvent) => {
     e.preventDefault();
     const trimmed = handleDraft.trim();
@@ -69,6 +93,10 @@ export default function Home() {
     (tempId: string, next: OptimisticMessage | null) => {
       setMessages((prev) => {
         if (next === null) return prev.filter((m) => m.id !== tempId);
+        // If SSE already delivered the real row, drop the tmp instead of
+        // inserting a duplicate.
+        const alreadyHasReal = prev.some((m) => m.id === next.id);
+        if (alreadyHasReal) return prev.filter((m) => m.id !== tempId);
         return prev.map((m) => (m.id === tempId ? next : m));
       });
     },

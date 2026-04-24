@@ -2,7 +2,9 @@ import { desc } from "drizzle-orm";
 import { db } from "@/db/client";
 import { messages } from "@/db/schema";
 import { createMessageSchema } from "@/lib/validation";
+import { broadcast } from "@/lib/broadcast";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -41,6 +43,8 @@ export async function POST(req: Request) {
       bottomText: bottomText ?? null,
     })
     .returning();
+
+  broadcast("message", row);
 
   return Response.json(row, { status: 201 });
 }
