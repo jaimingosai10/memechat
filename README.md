@@ -20,6 +20,22 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Database
+
+Set `DATABASE_URL` (see `.env.example`). Then:
+
+```bash
+npm run db:generate   # generate SQL after schema edits
+npm run db:migrate    # apply migrations
+npm run db:seed       # insert 3 fake messages
+```
+
+## API
+
+- `GET /health` → `{ ok, ts }`
+- `GET /api/messages` → latest 200 messages, newest last
+- `POST /api/messages` → body `{ handle, imageUrl, topText?, bottomText? }`
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
